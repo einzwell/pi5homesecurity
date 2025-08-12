@@ -234,7 +234,14 @@ threshold gen_id 1, sig_id 962506, type both, track by_dst, count 250, seconds 3
 
 ### nftables
 
-This nftables configuration serves to harden the RPi5. I originally intended to use nftables to block certain activites occuring between LAN devices, but it appears that nftables cannot act as an ARP proxy.
+If nftables isn't installed yet, run the following commands:
+
+```
+sudo apt install -y nftables
+sudo systemctl enable --now nftables
+```
+
+This nftables configuration serves to harden the RPi device. I originally intended to use nftables to block suspicious activites occuring in-between LAN devices, but it appears to be not possible since nftables cannot act as an ARP proxy.
 
 > [!NOTE]
 > Nftables configuration is available at [`config/nftables/nftables.conf`](config/nftables/nftables.conf)
@@ -267,6 +274,122 @@ table ip filter {
 }
 ```
 
+Afterwards, restart nftables by running the following command:
+
+```
+sudo systemctl restart nftables
+```
+
 ### Elasticsearch
 
-###
+Import Elasticsearch's GPG signing key:
+
+```
+wget -qO https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo gpg --dearmor -o /usr/share/keyrings/elasticsearch-keyring.gpg # Download the GPG signing key
+sudo apt-get install apt-transport-https # To enable APT download over HTTPS
+echo "deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.gpg] https://artifacts.elastic.co/packages/9.x/apt stable main" | sudo tee /etc/apt/sources.list.d/elastic-9.x.list # Store repository definition
+sudo apt-get update && sudo apt-get install elasticsearch # Update
+repositories and install Elasticsearch
+```
+
+Upon successful installation, you will be shown a prompt containing the generated credentials for the `elastic` account, as well as an instruction to run Elasticsearch as a Systemd service.
+
+```
+--------------------------- Security autoconfiguration information ------------------------------
+
+Authentication and authorization are enabled.
+TLS for the transport and HTTP layers is enabled and configured.
+
+The generated password for the elastic built-in superuser is : hj+YKgyhJ--KK8hNJ24Z
+
+If this node should join an existing cluster, you can reconfigure this with
+'/usr/share/elasticsearch/bin/elasticsearch-reconfigure-node --enrollment-token <token-here>'
+after creating an enrollment token on your existing cluster.
+
+You can complete the following actions at any time:
+
+Reset the password of the elastic built-in superuser with
+'/usr/share/elasticsearch/bin/elasticsearch-reset-password -u elastic'.
+
+Generate an enrollment token for Kibana instances with
+'/usr/share/elasticsearch/bin/elasticsearch-create-enrollment-token -s kibana'.
+
+Generate an enrollment token for Elasticsearch nodes with
+'/usr/share/elasticsearch/bin/elasticsearch-create-enrollment-token -s node'.
+
+-------------------------------------------------------------------------------------------------
+
+### NOT starting on installation, please execute the following statements to configure elasticsearch service to start automatically using systemd
+ sudo systemctl daemon-reload
+ sudo systemctl enable elasticsearch.service
+### You can start elasticsearch service by executing
+ sudo systemctl start elasticsearch.service
+```
+
+> [!IMPORTANT]
+I recommend limiting the memory allocation of JVM (Java Virtual Machine, which is used to run the Elastic stack) to avoid memory issues while running other applications by creating a new file at `/etc/elasticsearch/jvm.options.d/jvm-heap.options` and adding the following JVM arguments:
+>
+> ```
+> -Xms2g
+> -Xmx2g
+> ```
+
+### Kibana
+
+Install and run Kibana as a Systemd service by running the following commands:
+
+```
+sudo apt install kibana
+sudo systemctl enable --now kibana
+```
+
+You should now be able to open Kibana by going to `http://localhost:5601`.
+
+### Integrating Suricata with Elasticsearch & Enabling Resource Monitoring
+
+1. Open Kibana at `http://localhost:5601`.
+
+2. Go to _Management_ > _Integrations_, then search for Suricata.
+
+3. Click "Add Suricata".
+
+   ![Suricata Integration](images/SuricataIntegration.png)
+
+4. On "Configure integration", add a name for the integration instance and ensure "Collect Suricata eve logs (input: logfile)" is toggled on.
+
+   ![Configure Integration](images/ConfigureIntegration.png)
+
+5. On "Where to add this integration", choose "New hosts" and name the agent policy. Ensure "Collect system logs and metrics" is toggled on so that resource monitoring is enabled alongside the Suricata integration.
+
+   ![Agent Policy](images/AgentPolicy.png)
+
+6. Click "Save and continue".
+
+7. You will be shown a prompt to add Elastic Agent to the RPi host. Elastic agent acts as a log forwarder from Suricata to Elasticsearch. Click "Add Elastic Agent to your hosts".
+
+8. On "Integration policies," click "Add agent" and choose the "Run standalone" option.
+
+   ![Integration Policies](images/IntegrationPolicies.png)
+
+9. On "Configure the agent," click "Create API key" so that Elastic Agent can forward the log data securely. Save the generated configuration file to `/etc/elastic-agent/elastic-agent.yml`.
+
+   ![Configure Agent](images/ConfigureAgent.png)
+
+10. Install Elastic Agent via the Elasticsearch APT repository and run it as a Systemd service:
+
+   ```
+   sudo apt install elastic-agent
+   sudo systemctl enable --now elastic-agent
+   ```
+
+You can now view all alerts generated by Suricata and monitor the RPi's resource usage through the pre-built dashboards on _Analytics_ > _Dashboards_.
+
+## Monitoring Data
+
+As part of evaluation, the system was run for 24 hours from 16 June 2025 at 14:05 to 17 June 2025 at 14:05. All raw data files are available on [monitoring_data](monitoring_data). To summarise:
+
+- A total of 1,205,093 packets (~302 MB) was processed
+  - **No packet loss was observed**
+- Average CPU consumtion was ~2.5% with little fluctuation.
+- Average memory (RAM) consumption was ~5.68 GB
+  - High consumtpion attributed to Java which is used by the Elastic stack
