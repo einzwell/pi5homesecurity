@@ -1,0 +1,50 @@
+------------------------------------------------------------------------------------
+Date: 6/17/2025 -- 14:05:51 (uptime: 1d, 00h 00m 01s)
+------------------------------------------------------------------------------------
+Counter | TM Name | Value
+------------------------------------------------------------------------------------
+capture.kernel_packets | Total | 1205093
+capture.afpacket.polls | Total | 7553151
+capture.afpacket.poll_timeout | Total | 6460752
+capture.afpacket.poll_data | Total | 1092399
+decoder.pkts | Total | 1205099
+decoder.bytes | Total | 302062058
+decoder.ipv4 | Total | 1131108
+decoder.ipv6 | Total | 7628
+decoder.ethernet | Total | 1205099
+decoder.arp | Total | 66355
+decoder.unknown_ethertype | Total | 8
+decoder.tcp | Total | 223536
+tcp.syn | Total | 9406
+tcp.synack | Total | 3293
+tcp.rst | Total | 8394
+decoder.udp | Total | 909586
+decoder.icmpv4 | Total | 45
+decoder.icmpv6 | Total | 3483
+decoder.avg_pkt_size | Total | 250
+decoder.max_pkt_size | Total | 1514
+tcp.active_sessions | Total | 5
+flow.total | Total | 22107
+flow.active | Total | 30
+flow.tcp | Total | 12753
+flow.udp | Total | 5890
+flow.icmpv4 | Total | 3
+flow.icmpv6 | Total | 3461
+flow.tcp_reuse | Total | 4
+flow.wrk.spare_sync_avg | Total | 99
+flow.wrk.spare_sync | Total | 161
+flow.wrk.spare_sync_incomplete | Total | 15
+decoder.event.ipv4.opt_pad_required | Total | 2086
+decoder.event.icmpv4.unknown_code | Total | 6
+decoder.event.ipv6.zero_len_padn | Total | 2756
+flow.wrk.flows_evicted_needs_work | Total | 9338
+flow.wrk.flows_evicted_pkt_inject | Total | 9439
+flow.wrk.flows_evicted | Total | 1861
+flow.wrk.flows_injected | Total | 9234
+flow.wrk.flows_injected_max | Total | 39
+tcp.sessions | Total | 9362
+tcp.ssn_from_cache | Total | 3869
+tcp.ssn_from_pool | Total | 5493
+tcp.segment_from_cache | Total | 22081
+tcp.segment_from_pool | Total | 228
+tcp.stream_depth_reached | Total | 6
